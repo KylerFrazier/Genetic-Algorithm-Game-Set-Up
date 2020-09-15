@@ -38,30 +38,34 @@ class Controls(Frame):
         label.pack()
         return label
 
-class UserInterface(object):
+class UserInterface(Tk):
 
     def __init__(self):
         
-        self.gui = Tk()
-        # self.gui.call('tk', 'scaling', 0.5)
-        self.gui.title("Brick Breaker Menu")
-        self.gui.configure(background="black")
+        super().__init__()
+
+        self.title("Brick Breaker Menu")
+        self.configure(background="black")
         
-        self.controls = Controls(master=self.gui)
+        self.controls = Controls(master=self)
         self.controls.pack(fill=tk.Y, side=tk.LEFT)
-
-        self.game = MovingBall(self.gui)
-        self.game.pack(fill=tk.BOTH, side=tk.RIGHT, expand=True)
-        self.gui.update()
         
-        self.game.generate()
+        self.random_seed = 0
+        self.generate_game()
 
+        self.mainloop()
+
+    def generate_game(self):
+
+        self.game = MovingBall(self)
+        self.game.pack(fill=tk.BOTH, side=tk.RIGHT, expand=True)
+        self.update()
+        
+        self.game.generate(self.random_seed)
         self.game.bind_keys()
 
-        # self.gui.after(0, self.animate)
-        self.gui.mainloop()
-    
-    # def bind
+        self.random_seed += 1
+
 
 
     

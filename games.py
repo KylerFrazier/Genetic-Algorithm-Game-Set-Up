@@ -2,10 +2,13 @@ import tkinter as tk
 from tkinter import Tk, TclError, Frame, Canvas, Label, font
 from vectors import Vector2D
 from math import sqrt
+from random import seed, random as rand
 
 class GameCanvas(Canvas):
 
     def __init__(self, master=None, cnf={}, width=0, height=0, fps=25, **kw):
+        
+        self.gui = master
         
         if width == 0 or height == 0:
             width = master.winfo_screenwidth() - master.winfo_width()
@@ -32,20 +35,28 @@ class GameCanvas(Canvas):
 
         return percentage*self.winfo_height()/100
     
-    def update_frame_time(self, fps = 25):
+    def update_frame_time(self, fps=25):
 
         self.frame_time = 0 if fps == 0 else int(1000/fps)
         return self.frame_time
+
+    def update(self):
+
+        pass
 
     def animate(self):
 
         if self.frame_time != 0:
             try:
-                self.update()
+                exit_status = self.update()
             except TclError:
-                exit(0)
+                self.destroy()
         
-        self.after(self.frame_time, self.animate)
+        if exit_status == None:
+            self.after(self.frame_time, self.animate)
+        else:
+            self.destroy()
+            self.gui.generate_game()
 
 
 # Move the ball by accelerating it. The Ball has air resistance and momentum.
@@ -56,7 +67,10 @@ class MovingBall(GameCanvas):
         
         super().__init__(master, cnf, width, height, fps, **kw)
 
-    def generate(self):
+    def generate(self, random_seed=None):
+        
+        seed(random_seed)
+        
         self.vm = self.vw if self.vw() < self.vh() else self.vh
         self.dim = (self.vw, self.vh)
         
@@ -76,6 +90,18 @@ class MovingBall(GameCanvas):
             'right' : False
         }
 
+        self.goal_R = self.vm(1)
+        self.goal_r = Vector2D(
+            rand()*self.vw(98) + self.goal_R,
+            rand()*self.vh(98) + self.goal_R,
+        )
+
+        self.goal = self.create_oval(
+            self.goal_r.x - self.goal_R, self.goal_r.y - self.goal_R,
+            self.goal_r.x + self.goal_R, self.goal_r.y + self.goal_R,
+            fill = "black"
+        )
+
         self.ball = self.create_oval(
             self.r.x - self.R, self.r.y - self.R, 
             self.r.x + self.R, self.r.y + self.R, 
@@ -84,13 +110,17 @@ class MovingBall(GameCanvas):
 
         self.after(0, self.animate)
 
+    def distance(self, v1, v2) -> float:
+
+        return sqrt((v1.x-v2.x)**2 + (v1.y-v2.y)**2)
+
     def update_all_motion(self):
         
         # Air resistance
         
         for i in range(len(self.v)):
             sign = -1 if self.v[i] > 0 else 1
-            self.v[i] += sign * self.air_k * (self.v[i])**2#, abs(self.v[i]))
+            self.v[i] += sign * self.air_k * (self.v[i])**2
             if abs(self.v[i]) < self.vm(0.1):
                 self.v[i] = 0
 
@@ -134,8 +164,8 @@ class MovingBall(GameCanvas):
 
     def update(self):
         
-        # if end_condition:
-        #     self.destroy()
+        if self.distance(self.r, self.goal_r) <= abs(self.R - self.goal_R):
+            return 0
 
         self.update_all_motion()
         self.check_collision()
@@ -147,27 +177,27 @@ class MovingBall(GameCanvas):
         
         for i in range(len(self.r)):
             self.r[i] = self.r2[i]
-
+        
     def bind_keys(self):
         
-        self.master.bind("<KeyPress-w>", lambda _ : self.up(True))
-        self.master.bind("<KeyPress-a>", lambda _ : self.left(True))
-        self.master.bind("<KeyPress-s>", lambda _ : self.down(True))
-        self.master.bind("<KeyPress-d>", lambda _ : self.right(True))
-        self.master.bind("<KeyPress-Up>", lambda _ : self.up(True))
-        self.master.bind("<KeyPress-Left>", lambda _ : self.left(True))
-        self.master.bind("<KeyPress-Down>", lambda _ : self.down(True))
-        self.master.bind("<KeyPress-Right>", lambda _ : self.right(True))
-        self.master.bind("<KeyPress-Control_L>", lambda _ : self.run(True))
-        self.master.bind("<KeyRelease-w>", lambda _ : self.up(False))
-        self.master.bind("<KeyRelease-a>", lambda _ : self.left(False))
-        self.master.bind("<KeyRelease-s>", lambda _ : self.down(False))
-        self.master.bind("<KeyRelease-d>", lambda _ : self.right(False))
-        self.master.bind("<KeyRelease-Up>", lambda _ : self.up(False))
-        self.master.bind("<KeyRelease-Left>", lambda _ : self.left(False))
-        self.master.bind("<KeyRelease-Down>", lambda _ : self.down(False))
-        self.master.bind("<KeyRelease-Right>", lambda _ : self.right(False))
-        self.master.bind("<KeyRelease-Control_L>", lambda _ : self.run(False))
+        self.gui.bind("<KeyPress-w>", lambda _ : self.up(True))
+        self.gui.bind("<KeyPress-a>", lambda _ : self.left(True))
+        self.gui.bind("<KeyPress-s>", lambda _ : self.down(True))
+        self.gui.bind("<KeyPress-d>", lambda _ : self.right(True))
+        self.gui.bind("<KeyPress-Up>", lambda _ : self.up(True))
+        self.gui.bind("<KeyPress-Left>", lambda _ : self.left(True))
+        self.gui.bind("<KeyPress-Down>", lambda _ : self.down(True))
+        self.gui.bind("<KeyPress-Right>", lambda _ : self.right(True))
+        self.gui.bind("<KeyPress-Control_L>", lambda _ : self.run(True))
+        self.gui.bind("<KeyRelease-w>", lambda _ : self.up(False))
+        self.gui.bind("<KeyRelease-a>", lambda _ : self.left(False))
+        self.gui.bind("<KeyRelease-s>", lambda _ : self.down(False))
+        self.gui.bind("<KeyRelease-d>", lambda _ : self.right(False))
+        self.gui.bind("<KeyRelease-Up>", lambda _ : self.up(False))
+        self.gui.bind("<KeyRelease-Left>", lambda _ : self.left(False))
+        self.gui.bind("<KeyRelease-Down>", lambda _ : self.down(False))
+        self.gui.bind("<KeyRelease-Right>", lambda _ : self.right(False))
+        self.gui.bind("<KeyRelease-Control_L>", lambda _ : self.run(False))
         
     def up(self, press=True):
 
