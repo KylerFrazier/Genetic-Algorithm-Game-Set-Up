@@ -63,7 +63,7 @@ class MovingBall(GameCanvas):
         self.a = Vector2D(0,0)
         self.v = Vector2D(0,0)
         self.r = Vector2D(self.vw(50), self.vh(50))
-        self.r_prime = Vector2D(self.vw(50), self.vh(50))
+        self.r2 = Vector2D(self.vw(50), self.vh(50))    # same as r_prime
 
         self.R = self.vm(3)
         self.max_a = self.vm(0.2)
@@ -119,17 +119,17 @@ class MovingBall(GameCanvas):
         self.v.x += self.a.x
         self.v.y += self.a.y
 
-        self.r_prime.x += self.v.x
-        self.r_prime.y += self.v.y
+        self.r2.x += self.v.x
+        self.r2.y += self.v.y
 
     def check_collision(self):
         
         for i in range(len(self.r)):
-            if self.r_prime[i] - self.R < 0:
-                self.r_prime[i] = self.R
+            if self.r2[i] - self.R < 0:
+                self.r2[i] = self.R
                 self.v[i] = 0
-            if self.r_prime[i] + self.R > self.dim[i](100):
-                self.r_prime[i] = self.dim[i](100) - self.R
+            if self.r2[i] + self.R > self.dim[i](100):
+                self.r2[i] = self.dim[i](100) - self.R
                 self.v[i] = 0
 
     def update(self):
@@ -141,12 +141,12 @@ class MovingBall(GameCanvas):
         self.check_collision()
         self.move(
             self.ball, 
-            self.r_prime.x - self.r.x, 
-            self.r_prime.y - self.r.y
+            self.r2.x - self.r.x, 
+            self.r2.y - self.r.y
         )
         
         for i in range(len(self.r)):
-            self.r[i] = self.r_prime[i]
+            self.r[i] = self.r2[i]
 
     def bind_keys(self):
         
