@@ -58,10 +58,13 @@ class MovingBall(GameCanvas):
 
     def generate(self):
         self.vm = self.vw if self.vw() < self.vh() else self.vh
+        self.dim = (self.vw, self.vh)
         
         self.a = Vector2D(0,0)
         self.v = Vector2D(0,0)
         self.r = Vector2D(self.vw(50), self.vh(50))
+        self.r_prime = Vector2D(self.vw(50), self.vh(50))
+
         self.R = self.vm(3)
         self.max_a = self.vm(0.2)
         self.air_k = 0.01
@@ -81,7 +84,7 @@ class MovingBall(GameCanvas):
 
         self.after(0, self.animate)
 
-    def update_acceleration(self):
+    def update_all_motion(self):
         
         # Air resistance
         
@@ -109,19 +112,41 @@ class MovingBall(GameCanvas):
             
         a_scale = 0 if self.a.x == 0 and self.a.y == 0 else \
             self.max_a / sqrt(self.a.x**2 + self.a.y**2)
+        
         self.a.x *= a_scale
         self.a.y *= a_scale
 
         self.v.x += self.a.x
         self.v.y += self.a.y
 
+        self.r_prime.x += self.v.x
+        self.r_prime.y += self.v.y
+
+    def check_collision(self):
+        
+        for i in range(len(self.r)):
+            if self.r_prime[i] - self.R < 0:
+                self.r_prime[i] = self.R
+                self.v[i] = 0
+            if self.r_prime[i] + self.R > self.dim[i](100):
+                self.r_prime[i] = self.dim[i](100) - self.R
+                self.v[i] = 0
+
     def update(self):
         
         # if end_condition:
         #     self.destroy()
 
-        self.update_acceleration()
-        self.move(self.ball, self.v.x, self.v.y)
+        self.update_all_motion()
+        self.check_collision()
+        self.move(
+            self.ball, 
+            self.r_prime.x - self.r.x, 
+            self.r_prime.y - self.r.y
+        )
+        
+        for i in range(len(self.r)):
+            self.r[i] = self.r_prime[i]
 
     def bind_keys(self):
         
