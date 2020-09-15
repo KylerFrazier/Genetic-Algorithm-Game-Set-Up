@@ -6,24 +6,24 @@ from random import seed, random as rand
 
 class GameCanvas(Canvas):
 
-    def __init__(self, master=None, cnf={}, width=0, height=0, fps=25, **kw):
+    def __init__(self, master=None, top=None, cnf={}, width=0, height=0, fps=25, **kw):
         
-        self.gui = master
-        
+        self.gui = top
+
         if width == 0 or height == 0:
-            width = master.winfo_screenwidth() - master.winfo_width()
-            height = master.winfo_screenheight()
-            master.state("zoomed")
+            self.gui.state("zoomed")
         
         kw["width"] = width
         kw["height"] = height
         super().__init__(master, cnf, **kw)
 
         self.configure(
-            background="gray15", 
-            highlightbackground="blue", 
+            background="gray15",
+            highlightbackground="green",
             highlightthickness=5
         )
+
+        self.bindings = []
 
         self.update_frame_time(fps)
 
@@ -39,6 +39,14 @@ class GameCanvas(Canvas):
 
         self.frame_time = 0 if fps == 0 else int(1000/fps)
         return self.frame_time
+
+    def bind_keys(self, bind=True):
+        
+        for binding in self.bindings:
+            if bind:
+                self.gui.bind(*binding)
+            else:
+                self.gui.unbind(binding[0])
 
     def update(self):
 
@@ -56,16 +64,38 @@ class GameCanvas(Canvas):
             self.after(self.frame_time, self.animate)
         else:
             self.destroy()
-            self.gui.generate_game()
+            self.bind_keys(False)
+            return exit_status
 
 
 # Move the ball by accelerating it. The Ball has air resistance and momentum.
 
 class MovingBall(GameCanvas):
 
-    def __init__(self, master=None, cnf={}, width=0, height=0, fps=25, **kw):
+    def __init__(self, master=None, top=None, cnf={}, width=0, height=0, fps=25, **kw):
         
-        super().__init__(master, cnf, width, height, fps, **kw)
+        super().__init__(master, top, cnf, width, height, fps, **kw)
+
+        self.bindings = [
+            ("<KeyPress-w>", lambda _ : self.up(True)),
+            ("<KeyPress-a>", lambda _ : self.left(True)),
+            ("<KeyPress-s>", lambda _ : self.down(True)),
+            ("<KeyPress-d>", lambda _ : self.right(True)),
+            ("<KeyPress-Up>", lambda _ : self.up(True)),
+            ("<KeyPress-Left>", lambda _ : self.left(True)),
+            ("<KeyPress-Down>", lambda _ : self.down(True)),
+            ("<KeyPress-Right>", lambda _ : self.right(True)),
+            ("<KeyPress-Control_L>", lambda _ : self.run(True)),
+            ("<KeyRelease-w>", lambda _ : self.up(False)),
+            ("<KeyRelease-a>", lambda _ : self.left(False)),
+            ("<KeyRelease-s>", lambda _ : self.down(False)),
+            ("<KeyRelease-d>", lambda _ : self.right(False)),
+            ("<KeyRelease-Up>", lambda _ : self.up(False)),
+            ("<KeyRelease-Left>", lambda _ : self.left(False)),
+            ("<KeyRelease-Down>", lambda _ : self.down(False)),
+            ("<KeyRelease-Right>", lambda _ : self.right(False)),
+            ("<KeyRelease-Control_L>", lambda _ : self.run(False))
+        ]
 
     def generate(self, random_seed=None):
         
@@ -177,27 +207,6 @@ class MovingBall(GameCanvas):
         
         for i in range(len(self.r)):
             self.r[i] = self.r2[i]
-        
-    def bind_keys(self):
-        
-        self.gui.bind("<KeyPress-w>", lambda _ : self.up(True))
-        self.gui.bind("<KeyPress-a>", lambda _ : self.left(True))
-        self.gui.bind("<KeyPress-s>", lambda _ : self.down(True))
-        self.gui.bind("<KeyPress-d>", lambda _ : self.right(True))
-        self.gui.bind("<KeyPress-Up>", lambda _ : self.up(True))
-        self.gui.bind("<KeyPress-Left>", lambda _ : self.left(True))
-        self.gui.bind("<KeyPress-Down>", lambda _ : self.down(True))
-        self.gui.bind("<KeyPress-Right>", lambda _ : self.right(True))
-        self.gui.bind("<KeyPress-Control_L>", lambda _ : self.run(True))
-        self.gui.bind("<KeyRelease-w>", lambda _ : self.up(False))
-        self.gui.bind("<KeyRelease-a>", lambda _ : self.left(False))
-        self.gui.bind("<KeyRelease-s>", lambda _ : self.down(False))
-        self.gui.bind("<KeyRelease-d>", lambda _ : self.right(False))
-        self.gui.bind("<KeyRelease-Up>", lambda _ : self.up(False))
-        self.gui.bind("<KeyRelease-Left>", lambda _ : self.left(False))
-        self.gui.bind("<KeyRelease-Down>", lambda _ : self.down(False))
-        self.gui.bind("<KeyRelease-Right>", lambda _ : self.right(False))
-        self.gui.bind("<KeyRelease-Control_L>", lambda _ : self.run(False))
         
     def up(self, press=True):
 
