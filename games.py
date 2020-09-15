@@ -1,9 +1,11 @@
 import tkinter as tk
 from tkinter import Tk, TclError, Frame, Canvas, Label, font
+from vectors import Vector2D
+from math import sqrt
 
 class GameCanvas(Canvas):
 
-    def __init__(self, master=None, cnf={}, width=0, height=0, **kw):
+    def __init__(self, master=None, cnf={}, width=0, height=0, fps=25, **kw):
         
         if width == 0 or height == 0:
             width = master.winfo_screenwidth() - master.winfo_width()
@@ -20,7 +22,7 @@ class GameCanvas(Canvas):
             highlightthickness=5
         )
 
-        self.update_frame_time()
+        self.update_frame_time(fps)
 
     def vw(self, percentage=1):
 
@@ -32,36 +34,38 @@ class GameCanvas(Canvas):
     
     def update_frame_time(self, fps = 25):
 
-        self.frame_time = int(1000/fps)
+        self.frame_time = 0 if fps == 0 else int(1000/fps)
         return self.frame_time
 
     def animate(self):
 
-        try:
-            self.update()
-        except TclError:
-            exit(0)
+        if self.frame_time != 0:
+            try:
+                self.update()
+            except TclError:
+                exit(0)
         
         self.after(self.frame_time, self.animate)
 
 
+# Move the ball by accelerating it. The Ball has air resistance and momentum.
+
 class MovingBall(GameCanvas):
 
-    def __init__(self, master=None, cnf={}, width=0, height=0, **kw):
+    def __init__(self, master=None, cnf={}, width=0, height=0, fps=25, **kw):
         
-        super().__init__(master, cnf, width, height, **kw)
+        super().__init__(master, cnf, width, height, fps, **kw)
 
     def generate(self):
-        vw, vh = self.vw, self.vh
-        vm = vw if vw() < vh() else vh
-
-        self.ball = self.create_oval(
-            vw(50) - vm(3), vh(50) - vm(3), vw(50) + vm(3), vh(50) + vm(3), 
-            fill = "white", tag = "animate"
-        )
+        self.vm = self.vw if self.vw() < self.vh() else self.vh
         
-        self.dx, self.dy = 0, 0
-        self.speed = vm(1)
+        self.a = Vector2D(0,0)
+        self.v = Vector2D(0,0)
+        self.r = Vector2D(self.vw(50), self.vh(50))
+        self.R = self.vm(3)
+        self.max_a = self.vm(0.2)
+        self.air_k = 0.01
+
         self.pressed = {
             'up' : False, 
             'left' : False, 
@@ -69,7 +73,55 @@ class MovingBall(GameCanvas):
             'right' : False
         }
 
+        self.ball = self.create_oval(
+            self.r.x - self.R, self.r.y - self.R, 
+            self.r.x + self.R, self.r.y + self.R, 
+            fill = "white"
+        )
+
         self.after(0, self.animate)
+
+    def update_acceleration(self):
+        
+        # Air resistance
+        
+        for i in range(len(self.v)):
+            sign = -1 if self.v[i] > 0 else 1
+            self.v[i] += sign * self.air_k * (self.v[i])**2#, abs(self.v[i]))
+            if abs(self.v[i]) < self.vm(0.1):
+                self.v[i] = 0
+
+        # Keyboard press
+
+        if self.pressed['up'] == self.pressed['down']:
+            self.a.y = 0
+        elif self.pressed['up']:
+            self.a.y = -1
+        else:
+            self.a.y = 1
+        
+        if self.pressed['left'] == self.pressed['right']:
+            self.a.x = 0
+        elif self.pressed['left']:
+            self.a.x = -1
+        else:
+            self.a.x = 1
+            
+        a_scale = 0 if self.a.x == 0 and self.a.y == 0 else \
+            self.max_a / sqrt(self.a.x**2 + self.a.y**2)
+        self.a.x *= a_scale
+        self.a.y *= a_scale
+
+        self.v.x += self.a.x
+        self.v.y += self.a.y
+
+    def update(self):
+        
+        # if end_condition:
+        #     self.destroy()
+
+        self.update_acceleration()
+        self.move(self.ball, self.v.x, self.v.y)
 
     def bind_keys(self):
         
@@ -77,51 +129,38 @@ class MovingBall(GameCanvas):
         self.master.bind("<KeyPress-a>", lambda _ : self.left(True))
         self.master.bind("<KeyPress-s>", lambda _ : self.down(True))
         self.master.bind("<KeyPress-d>", lambda _ : self.right(True))
+        self.master.bind("<KeyPress-Up>", lambda _ : self.up(True))
+        self.master.bind("<KeyPress-Left>", lambda _ : self.left(True))
+        self.master.bind("<KeyPress-Down>", lambda _ : self.down(True))
+        self.master.bind("<KeyPress-Right>", lambda _ : self.right(True))
+        self.master.bind("<KeyPress-Control_L>", lambda _ : self.run(True))
         self.master.bind("<KeyRelease-w>", lambda _ : self.up(False))
         self.master.bind("<KeyRelease-a>", lambda _ : self.left(False))
         self.master.bind("<KeyRelease-s>", lambda _ : self.down(False))
         self.master.bind("<KeyRelease-d>", lambda _ : self.right(False))
+        self.master.bind("<KeyRelease-Up>", lambda _ : self.up(False))
+        self.master.bind("<KeyRelease-Left>", lambda _ : self.left(False))
+        self.master.bind("<KeyRelease-Down>", lambda _ : self.down(False))
+        self.master.bind("<KeyRelease-Right>", lambda _ : self.right(False))
+        self.master.bind("<KeyRelease-Control_L>", lambda _ : self.run(False))
         
     def up(self, press=True):
 
         self.pressed['up'] = press
-        self.update_direction()
 
     def left(self, press=True):
 
         self.pressed['left'] = press
-        self.update_direction()
 
     def down(self, press=True):
 
         self.pressed['down'] = press
-        self.update_direction()
 
     def right(self, press=True):
 
         self.pressed['right'] = press
-        self.update_direction()
-    
-    def update_direction(self):
 
-        if self.pressed['up'] == self.pressed['down']:
-            self.dy = 0
-        elif self.pressed['up']:
-            self.dy = -self.speed
-        else:
-            self.dy = self.speed
-        
-        if self.pressed['left'] == self.pressed['right']:
-            self.dx = 0
-        elif self.pressed['left']:
-            self.dx = -self.speed
-        else:
-            self.dx = self.speed
+    def run(self, press=True):
 
-
-    def update(self):
+        self.max_a = self.vm(1) if press else self.vm(0.2)
         
-        # if end_condition:
-        #     self.gui.destroy()
-        
-        self.move(self.ball, self.dx, self.dy)
