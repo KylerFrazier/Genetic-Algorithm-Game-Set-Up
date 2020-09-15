@@ -2,6 +2,9 @@ import tkinter as tk
 from tkinter import Tk, Frame, Canvas, Label, font
 from time import sleep
 from games import MovingBall
+import ctypes
+
+ctypes.windll.shcore.SetProcessDpiAwareness(1)
 
 class Controls(Frame):
 
@@ -40,6 +43,7 @@ class UserInterface(object):
     def __init__(self):
         
         self.gui = Tk()
+        # self.gui.call('tk', 'scaling', 0.5)
         self.gui.title("Brick Breaker Menu")
         self.gui.configure(background="black")
         
@@ -50,6 +54,8 @@ class UserInterface(object):
         self.game.pack(fill=tk.BOTH, side=tk.RIGHT, expand=True)
         self.gui.update()
         
+        self.game.generate()
+
         self.game.bind_keys()
 
         # self.gui.after(0, self.animate)

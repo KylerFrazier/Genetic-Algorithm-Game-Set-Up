@@ -3,7 +3,12 @@ from tkinter import Tk, TclError, Frame, Canvas, Label, font
 
 class GameCanvas(Canvas):
 
-    def __init__(self, master=None, cnf={}, width=852, height=480, **kw):
+    def __init__(self, master=None, cnf={}, width=0, height=0, **kw):
+        
+        if width == 0 or height == 0:
+            width = master.winfo_screenwidth() - master.winfo_width()
+            height = master.winfo_screenheight()
+            master.state("zoomed")
         
         kw["width"] = width
         kw["height"] = height
@@ -17,13 +22,14 @@ class GameCanvas(Canvas):
 
         self.update_frame_time()
 
-    def vw(self, percentage):
+    def vw(self, percentage=1):
 
         return percentage*self.winfo_width()/100
 
-    def vh(self, percentage):
+    def vh(self, percentage=1):
 
         return percentage*self.winfo_height()/100
+    
     def update_frame_time(self, fps = 25):
 
         self.frame_time = int(1000/fps)
@@ -41,17 +47,21 @@ class GameCanvas(Canvas):
 
 class MovingBall(GameCanvas):
 
-    def __init__(self, master=None, cnf={}, width=852, height=480, **kw):
+    def __init__(self, master=None, cnf={}, width=0, height=0, **kw):
         
         super().__init__(master, cnf, width, height, **kw)
-        vw, vh = width/100, height/100
+
+    def generate(self):
+        vw, vh = self.vw, self.vh
+        vm = vw if vw() < vh() else vh
+
         self.ball = self.create_oval(
-            50*vw - 10, 50*vh - 10, 50*vw + 10, 50*vh + 10, 
+            vw(50) - vm(3), vh(50) - vm(3), vw(50) + vm(3), vh(50) + vm(3), 
             fill = "white", tag = "animate"
         )
         
         self.dx, self.dy = 0, 0
-        self.speed = 15
+        self.speed = vm(1)
         self.pressed = {
             'up' : False, 
             'left' : False, 
@@ -60,7 +70,6 @@ class MovingBall(GameCanvas):
         }
 
         self.after(0, self.animate)
-
 
     def bind_keys(self):
         
@@ -98,16 +107,16 @@ class MovingBall(GameCanvas):
         if self.pressed['up'] == self.pressed['down']:
             self.dy = 0
         elif self.pressed['up']:
-            self.dy = -10
+            self.dy = -self.speed
         else:
-            self.dy = 10
+            self.dy = self.speed
         
         if self.pressed['left'] == self.pressed['right']:
             self.dx = 0
         elif self.pressed['left']:
-            self.dx = -10
+            self.dx = -self.speed
         else:
-            self.dx = 10
+            self.dx = self.speed
 
 
     def update(self):
