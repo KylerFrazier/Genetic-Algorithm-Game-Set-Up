@@ -6,17 +6,15 @@ from random import seed, random as rand
 
 class GameCanvas(Canvas):
 
-    def __init__(self, master=None, top=None, cnf={}, width=0, height=0, fps=25, **kw):
-        
-        self.gui = top
-
-        if width == 0 or height == 0:
-            self.gui.state("zoomed")
+    def __init__(self, master=None, cnf={}, width=0, height=0, fps=25, **kw):
         
         kw["width"] = width
         kw["height"] = height
         super().__init__(master, cnf, **kw)
 
+        if width == 0 or height == 0:
+            self.winfo_toplevel().state("zoomed")
+        
         self.configure(
             background="gray15",
             highlightbackground="green",
@@ -44,13 +42,13 @@ class GameCanvas(Canvas):
         
         for binding in self.bindings:
             if bind:
-                self.gui.bind(*binding)
+                self.winfo_toplevel().bind(*binding)
             else:
-                self.gui.unbind(binding[0])
+                self.winfo_toplevel().unbind(binding[0])
 
     def update(self):
 
-        pass
+        return 0
 
     def animate(self):
 
@@ -63,8 +61,8 @@ class GameCanvas(Canvas):
         if exit_status == None:
             self.after(self.frame_time, self.animate)
         else:
-            self.destroy()
             self.bind_keys(False)
+            self.destroy()
             return exit_status
 
 
@@ -72,9 +70,9 @@ class GameCanvas(Canvas):
 
 class MovingBall(GameCanvas):
 
-    def __init__(self, master=None, top=None, cnf={}, width=0, height=0, fps=25, **kw):
+    def __init__(self, master=None, cnf={}, width=0, height=0, fps=25, **kw):
         
-        super().__init__(master, top, cnf, width, height, fps, **kw)
+        super().__init__(master, cnf, width, height, fps, **kw)
 
         self.bindings = [
             ("<KeyPress-w>", lambda _ : self.up(True)),

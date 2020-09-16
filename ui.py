@@ -124,14 +124,14 @@ class UserInterface(Tk):
         
         self.games = []
         if self.choice.get() == 0:
-            self.games.append(MovingBall(self.game_frame, top=self))
+            self.games.append(MovingBall(self.game_frame))
             self.games[0].pack(fill=tk.BOTH, side=tk.RIGHT, expand=True)
         else:
             rows=5
             col=8
             for i in range(rows):
                 for j in range(col):
-                    self.games.append(MovingBall(self.game_frame, top=self, width=300, height=300))
+                    self.games.append(MovingBall(self.game_frame, width=300, height=300))
                     self.games[i*col+j].grid(row=i, column=j)
         
         self.update()
