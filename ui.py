@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import Tk, Frame, Canvas, Label, Button, Radiobutton, font
+from tkinter import Tk, Frame, Canvas, Label, Button, Radiobutton, Grid, font
 from time import sleep
 from games import MovingBall
 import ctypes
@@ -91,6 +91,7 @@ class UserInterface(Tk):
 
         self.title("Brick Breaker Menu")
         self.configure(background="black")
+        self.state("zoomed")
         
         self.controls = Controls(master=self)
 
@@ -107,7 +108,7 @@ class UserInterface(Tk):
 
         self.controls.pack(fill=tk.Y, side=tk.LEFT)
 
-        self.game_frame = Frame()
+        self.game_frame = Frame(master=self)
         self.game_frame.pack(fill=tk.BOTH, side=tk.RIGHT, expand=True)
         self.game_frame.configure(background="gray15")
         
@@ -118,26 +119,36 @@ class UserInterface(Tk):
 
     def gen_game(self):
 
-        if len(self.games) != 0:
-            for game in self.games:
-                game.destroy()
-        
+        for game in self.games:
+            game.destroy()
+
+        scalable = True     # Add button
+
         self.games = []
         if self.choice.get() == 0:
             self.games.append(MovingBall(self.game_frame))
-            self.games[0].pack(fill=tk.BOTH, side=tk.RIGHT, expand=True)
+            if scalable:
+                self.games[0].pack(fill=tk.BOTH, expand=True)
+            else:
+                self.games[0].pack(expand=True)
         else:
-            rows=5
-            col=8
+            rows=5          # Add incrimenter
+            col=8           # Add incrimenter
             for i in range(rows):
+                if scalable:
+                    Grid.rowconfigure(self.game_frame, i, weight=1)
                 for j in range(col):
-                    self.games.append(MovingBall(self.game_frame, width=300, height=300))
+                    if scalable:
+                        Grid.columnconfigure(self.game_frame, j, weight=1)
+                    self.games.append(MovingBall(self.game_frame))
                     self.games[i*col+j].grid(row=i, column=j)
         
         self.update()
         
         for game in self.games:
             game.generate(self.random_seed)
+
+        self.update()
 
         if self.choice.get() == 0:
             self.games[0].bind_keys()

@@ -6,15 +6,12 @@ from random import seed, random as rand
 
 class GameCanvas(Canvas):
 
-    def __init__(self, master=None, cnf={}, width=0, height=0, fps=25, **kw):
+    def __init__(self, master=None, cnf={}, width=1280, height=720, fps=25, **kw):
         
         kw["width"] = width
         kw["height"] = height
         super().__init__(master, cnf, **kw)
 
-        if width == 0 or height == 0:
-            self.winfo_toplevel().state("zoomed")
-        
         self.configure(
             background="gray15",
             highlightbackground="green",
@@ -70,7 +67,7 @@ class GameCanvas(Canvas):
 
 class MovingBall(GameCanvas):
 
-    def __init__(self, master=None, cnf={}, width=0, height=0, fps=25, **kw):
+    def __init__(self, master=None, cnf={}, width=1280, height=720, fps=25, **kw):
         
         super().__init__(master, cnf, width, height, fps, **kw)
 
