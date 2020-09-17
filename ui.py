@@ -63,10 +63,7 @@ class UserInterface(tk.Tk):
         self.games = []
         if self.choice.get() == 0:
             self.games.append(MovingBall(self.game_frame))
-            if scalable:
-                self.games[0].pack(fill=tk.BOTH, expand=True)
-            else:
-                self.games[0].pack(expand=True)
+            self.games[0].pack(fill=tk.BOTH if scalable else tk.NONE, expand=True)
         else:
             rows=int(self.rows.get())
             col=int(self.cols.get())
@@ -84,10 +81,14 @@ class UserInterface(tk.Tk):
 
         self.update()
 
-        if self.choice.get() == 0:
-            self.games[0].bind_keys()
-        else:
-            self.games[0].bind_keys()
-            # REPLACE THIS WITH BINDING TO A.I.
-        
+        try:
+            if self.choice.get() == 0:
+                self.games[0].bind_keys()
+            else:
+                self.games[0].bind_keys()
+                # REPLACE THIS WITH BINDING TO A.I.
+        except:
+            print("Unable to connect input with the game.")
+            print("The game likely crashed before input connections were finished.")
+
         self.random_seed += 1

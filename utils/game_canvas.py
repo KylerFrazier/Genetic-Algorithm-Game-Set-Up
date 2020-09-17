@@ -13,7 +13,7 @@ class GameCanvas(tk.Canvas):
             highlightthickness=5
         )
 
-        self.update_frame_time(fps)
+        self.set_fps(fps)
 
     def vw(self, percentage=1):
 
@@ -23,10 +23,14 @@ class GameCanvas(tk.Canvas):
 
         return percentage*self.winfo_height()/100
     
-    def update_frame_time(self, fps=25):
+    def set_fps(self, fps=25):
 
         self.frame_time = 0 if fps == 0 else int(1000/fps)
         return self.frame_time
+    
+    def get_actions(self) -> set:
+
+        return {action for action in self.get_bindings().values()}
 
     def get_bindings(self) -> dict:
         
@@ -34,11 +38,11 @@ class GameCanvas(tk.Canvas):
 
     def bind_keys(self, bind=True):
         
-        for action, function in self.get_bindings().items():
+        for binding, action in self.get_bindings().items():
             if bind:
-                self.winfo_toplevel().bind(action, function)
+                self.winfo_toplevel().bind(binding, action)
             else:
-                self.winfo_toplevel().unbind(action)
+                self.winfo_toplevel().unbind(binding)
 
     def update(self):
 
@@ -46,11 +50,10 @@ class GameCanvas(tk.Canvas):
 
     def animate(self):
 
-        if self.frame_time != 0:
-            try:
-                score = self.update()
-            except tk.TclError:
-                self.destroy()
+        try:
+            score = self.update()
+        except tk.TclError:
+            self.destroy()
         
         if score == None:
             self.after(self.frame_time, self.animate)

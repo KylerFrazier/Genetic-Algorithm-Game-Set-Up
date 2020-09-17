@@ -52,8 +52,8 @@ class MovingBall(GameCanvas):
             fill = "light blue"
         )
 
-        self.score = 0
-        self.score_decrement = 1/self.distance(self.r, self.goal_r)
+        self.tics = 0
+        self.score_factor = 1/self.distance(self.r, self.goal_r)
 
         self.after(0, self.animate)
     
@@ -134,10 +134,12 @@ class MovingBall(GameCanvas):
 
     def update(self):
         
+        if self.tics >= 1000:
+            return -self.tics
         if self.distance(self.r, self.goal_r) <= abs(self.R - self.goal_R):
-            return self.score
+            return -self.tics * self.score_factor
         
-        self.score -= self.score_decrement
+        self.tics += 1
 
         self.update_all_motion()
         self.check_collision()
