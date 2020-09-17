@@ -57,27 +57,27 @@ class MovingBall(GameCanvas):
 
         self.after(0, self.animate)
     
-    def bindings(self):
+    def get_bindings(self):
         
         return {
-            "<KeyPress-w>" : (lambda _ : self.up(True)),
-            "<KeyPress-a>" : (lambda _ : self.left(True)),
-            "<KeyPress-s>" : (lambda _ : self.down(True)),
-            "<KeyPress-d>" : (lambda _ : self.right(True)),
-            "<KeyPress-Up>" : (lambda _ : self.up(True)),
-            "<KeyPress-Left>" : (lambda _ : self.left(True)),
-            "<KeyPress-Down>" : (lambda _ : self.down(True)),
-            "<KeyPress-Right>" : (lambda _ : self.right(True)),
-            "<KeyPress-Control_L>" : (lambda _ : self.run(True)),
-            "<KeyRelease-w>" : (lambda _ : self.up(False)),
-            "<KeyRelease-a>" : (lambda _ : self.left(False)),
-            "<KeyRelease-s>" : (lambda _ : self.down(False)),
-            "<KeyRelease-d>" : (lambda _ : self.right(False)),
-            "<KeyRelease-Up>" : (lambda _ : self.up(False)),
-            "<KeyRelease-Left>" : (lambda _ : self.left(False)),
-            "<KeyRelease-Down>" : (lambda _ : self.down(False)),
-            "<KeyRelease-Right>" : (lambda _ : self.right(False)),
-            "<KeyRelease-Control_L>" : (lambda _ : self.run(False))
+            "<KeyPress-w>" : (lambda _=None : self.up(True)),
+            "<KeyPress-a>" : (lambda _=None : self.left(True)),
+            "<KeyPress-s>" : (lambda _=None : self.down(True)),
+            "<KeyPress-d>" : (lambda _=None : self.right(True)),
+            "<KeyPress-Up>" : (lambda _=None : self.up(True)),
+            "<KeyPress-Left>" : (lambda _=None : self.left(True)),
+            "<KeyPress-Down>" : (lambda _=None : self.down(True)),
+            "<KeyPress-Right>" : (lambda _=None : self.right(True)),
+            "<KeyPress-Control_L>" : (lambda _=None : self.run(True)),
+            "<KeyRelease-w>" : (lambda _=None : self.up(False)),
+            "<KeyRelease-a>" : (lambda _=None : self.left(False)),
+            "<KeyRelease-s>" : (lambda _=None : self.down(False)),
+            "<KeyRelease-d>" : (lambda _=None : self.right(False)),
+            "<KeyRelease-Up>" : (lambda _=None : self.up(False)),
+            "<KeyRelease-Left>" : (lambda _=None : self.left(False)),
+            "<KeyRelease-Down>" : (lambda _=None : self.down(False)),
+            "<KeyRelease-Right>" : (lambda _=None : self.right(False)),
+            "<KeyRelease-Control_L>" : (lambda _=None : self.run(False))
         }
     
     def distance(self, v1, v2) -> float:

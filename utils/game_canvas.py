@@ -28,13 +28,13 @@ class GameCanvas(tk.Canvas):
         self.frame_time = 0 if fps == 0 else int(1000/fps)
         return self.frame_time
 
-    def bindings(self) -> dict:
+    def get_bindings(self) -> dict:
         
         return {}
 
     def bind_keys(self, bind=True):
         
-        for action, function in self.bindings().items():
+        for action, function in self.get_bindings().items():
             if bind:
                 self.winfo_toplevel().bind(action, function)
             else:
