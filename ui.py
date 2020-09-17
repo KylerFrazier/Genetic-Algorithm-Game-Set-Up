@@ -1,89 +1,12 @@
 import tkinter as tk
-from tkinter import Tk, Frame, Canvas, Label, Button, Radiobutton, Grid, font
-from time import sleep
-from games import MovingBall
 import ctypes
+from games import MovingBall
+from utils.controls import Controls
+
 
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
 
-class Controls(Frame):
-
-    def __init__(self, master=None, cnf={}, **kw):
-        
-        super().__init__(master, cnf, **kw)
-
-        self.color = "white"
-        self.background = "gray15"
-        self.button_background = "gray25"
-        self.hover = "gray55"
-        self.button_selected = "gray40"
-        self.border = "gray"
-        self.font_family = "Times New Roman"
-
-        self.configure(
-            background=self.background, 
-            highlightbackground=self.border, 
-            highlightthickness=5
-        )
-
-    def make_label(self, text="", size=14):
-
-        temp_font = font.Font(family=self.font_family, size=size)
-        label = Label(
-            master=self, 
-            foreground=self.color,
-            background=self.background,
-            font=temp_font,
-            text=text,
-        )
-        label.grid(padx=50, pady=50)
-        return label
-
-    def make_radio_buttons(self, var=1, choices=[], size=14):
-        temp_font = font.Font(family=self.font_family, size=size)
-        radiobuttons = []
-        for i, choice in enumerate(choices):
-            rbutton = Radiobutton(
-                master=self,
-                text=choice,
-                font=temp_font,
-                foreground=self.color,
-                background=self.button_background,
-                activebackground=self.hover,
-                activeforeground=self.color,
-                selectcolor=self.button_selected,
-                indicatoron=0,
-                borderwidth=0,
-                width=10,
-                pady=10,
-                variable=var,
-                value=i
-            )
-            rbutton.grid(padx=10, pady=10)
-            radiobuttons.append(rbutton)
-        return radiobuttons
-
-    def make_button(self, text="", function=lambda : None, size=14, ):
-
-        temp_font = font.Font(family=self.font_family, size=size)
-        button = Button(
-            master=self,
-            foreground=self.color,
-            background=self.button_background,
-            activebackground=self.hover,
-            activeforeground=self.color,
-            font=temp_font,
-            text=text,
-            pady=25,
-            padx=25,
-            borderwidth=0
-        )
-        button.grid(padx=50, pady=50)
-        button.bind("<Button-1>", lambda _, *args, **kwargs : function(*args, **kwargs ))
-        return button
-
-    
-class UserInterface(Tk):
+class UserInterface(tk.Tk):
 
     def __init__(self):
         
@@ -97,18 +20,31 @@ class UserInterface(Tk):
 
         self.choice = tk.IntVar()
         self.choice.set(0)
+        self.rows = tk.StringVar()
+        self.rows.set("10")
+        self.cols = tk.StringVar()
+        self.cols.set("10")
+        self.scale = tk.IntVar()
+        self.choice.set(0)
 
+        self.controls.make_gap(50)
         self.controls.title = self.controls.make_label(
-            "Brick Breaker AI Controls", 20)
+            "Genetic Algorithm\nGame Controls", 20)
+        self.controls.make_gap(50)
         self.controls.choice_buttons = self.controls.make_radio_buttons(
             self.choice, ["User", "A.I."])
+        self.controls.make_gap(50)
+        self.controls.rows, self.controls.cols = self.controls.make_spinboxes(
+            {"Number of Rows: " : self.rows, "Number of Columns: " : self.cols})
+        self.controls.scale_buttons = self.controls.make_radio_buttons(
+            self.scale, ["Scalable", "Fixed"])
+        self.controls.make_gap(100)
         self.controls.gen = self.controls.make_button(
             "Generate Game", self.gen_game)
-
-
+        
         self.controls.pack(fill=tk.Y, side=tk.LEFT)
 
-        self.game_frame = Frame(master=self)
+        self.game_frame = tk.Frame(master=self)
         self.game_frame.pack(fill=tk.BOTH, side=tk.RIGHT, expand=True)
         self.game_frame.configure(background="gray15")
         
@@ -122,7 +58,7 @@ class UserInterface(Tk):
         for game in self.games:
             game.destroy()
 
-        scalable = True     # Add button
+        scalable = True if self.scale.get() == 0 else False
 
         self.games = []
         if self.choice.get() == 0:
@@ -132,16 +68,14 @@ class UserInterface(Tk):
             else:
                 self.games[0].pack(expand=True)
         else:
-            rows=5          # Add incrimenter
-            col=8           # Add incrimenter
+            rows=int(self.rows.get())
+            col=int(self.cols.get())
             for i in range(rows):
-                if scalable:
-                    Grid.rowconfigure(self.game_frame, i, weight=1)
+                tk.Grid.rowconfigure(self.game_frame, i, weight=1 if scalable else 0)
                 for j in range(col):
-                    if scalable:
-                        Grid.columnconfigure(self.game_frame, j, weight=1)
+                    tk.Grid.columnconfigure(self.game_frame, j, weight=1 if scalable else 0)
                     self.games.append(MovingBall(self.game_frame))
-                    self.games[i*col+j].grid(row=i, column=j)
+                    self.games[i*col+j].grid(row=i, column=j, sticky=tk.N+tk.S+tk.E+tk.W)
         
         self.update()
         
