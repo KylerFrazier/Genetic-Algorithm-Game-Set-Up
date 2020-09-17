@@ -28,19 +28,17 @@ class UserInterface(tk.Tk):
         self.choice.set(0)
 
         self.controls.make_gap(50)
-        self.controls.title = self.controls.make_label(
-            "Genetic Algorithm\nGame Controls", 20)
+        self.controls.make_label("Genetic Algorithm\nGame Controls", 25)
         self.controls.make_gap(50)
-        self.controls.choice_buttons = self.controls.make_radio_buttons(
-            self.choice, ["User", "A.I."])
+        self.controls.make_radio_buttons(self.choice, ["User", "A.I."])
         self.controls.make_gap(50)
-        self.controls.rows, self.controls.cols = self.controls.make_spinboxes(
-            {"Number of Rows: " : self.rows, "Number of Columns: " : self.cols})
-        self.controls.scale_buttons = self.controls.make_radio_buttons(
-            self.scale, ["Scalable", "Fixed"])
-        self.controls.make_gap(100)
-        self.controls.gen = self.controls.make_button(
-            "Generate Game", self.gen_game)
+        self.controls.make_spinboxes({
+            "Number of Rows: " : self.rows, 
+            "Number of Columns: " : self.cols})
+        self.controls.make_gap(50)
+        self.controls.make_radio_buttons(self.scale, ["Scalable", "Fixed"])
+        self.controls.make_gap(50)
+        self.controls.make_button("Generate Game", self.gen_game)
         
         self.controls.pack(fill=tk.Y, side=tk.LEFT)
 
@@ -56,7 +54,9 @@ class UserInterface(tk.Tk):
     def gen_game(self):
 
         for game in self.games:
-            game.destroy()
+            if game.winfo_exists():
+                game.bind_keys(False)
+                game.destroy()
 
         scalable = True if self.scale.get() == 0 else False
 
