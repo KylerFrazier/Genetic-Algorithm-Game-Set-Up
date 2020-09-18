@@ -1,15 +1,12 @@
 from math import sqrt
 from random import seed, random as rand
+from collections import namedtuple
 from utils.game_canvas import GameCanvas
 from utils.vectors import Vector2D
 
 # Move the ball to the goal by accelerating it. The Ball has air resistance
 # and momentum. Controlled with the WASD keys; press CTRL to run.
 class MovingBall(GameCanvas):
-
-    def __init__(self, master=None, cnf={}, width=1280, height=720, fps=25, **kw):
-        
-        super().__init__(master, cnf, width, height, fps, **kw)
 
     def generate(self, random_seed=None):
         
@@ -57,7 +54,7 @@ class MovingBall(GameCanvas):
 
         self.after(0, self.animate)
     
-    def get_bindings(self):
+    def get_bindings(self) -> dict:
         
         return {
             "<KeyPress-w>" : (lambda _=None : self.up(True)),
@@ -79,7 +76,16 @@ class MovingBall(GameCanvas):
             "<KeyRelease-Right>" : (lambda _=None : self.right(False)),
             "<KeyRelease-Control_L>" : (lambda _=None : self.run(False))
         }
-    
+
+    def get_state(self) -> dict:
+        
+        return {
+            "x" : self.r.x,
+            "y" : self.r.y,
+            "goal x" : self.goal_r.x,
+            "goal y" : self.goal_r.y
+        }
+
     def distance(self, v1, v2) -> float:
 
         return sqrt((v1.x-v2.x)**2 + (v1.y-v2.y)**2)

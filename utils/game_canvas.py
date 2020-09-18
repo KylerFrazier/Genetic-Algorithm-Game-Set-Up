@@ -1,5 +1,7 @@
 import tkinter as tk
-class GameCanvas(tk.Canvas):
+from abc import ABCMeta, abstractmethod
+
+class GameCanvas(tk.Canvas, metaclass=ABCMeta):
 
     def __init__(self, master=None, cnf={}, width=1280, height=720, fps=25, **kw):
         
@@ -14,6 +16,31 @@ class GameCanvas(tk.Canvas):
         )
 
         self.set_fps(fps)
+        self.score = None
+
+    @abstractmethod
+    def generate(self):
+
+        pass
+
+    @abstractmethod
+    def get_bindings(self) -> dict:
+        
+        return {}
+
+    @abstractmethod
+    def get_state(self) -> dict:
+
+        return {}
+
+    @abstractmethod
+    def update(self):
+
+        return 0
+
+    def get_score(self):
+
+        return self.score
 
     def vw(self, percentage=1):
 
@@ -25,16 +52,17 @@ class GameCanvas(tk.Canvas):
     
     def set_fps(self, fps=25):
 
+        self.fps = fps
         self.frame_time = 0 if fps == 0 else int(1000/fps)
         return self.frame_time
     
-    def get_actions(self) -> set:
+    def get_fps(self):
 
-        return {action for action in self.get_bindings().values()}
+        return self.fps
 
-    def get_bindings(self) -> dict:
-        
-        return {}
+    def get_actions(self) -> list:
+        bindings = self.get_bindings()
+        return [bindings[binding] for binding in sorted(bindings)]
 
     def bind_keys(self, bind=True):
         
@@ -43,10 +71,6 @@ class GameCanvas(tk.Canvas):
                 self.winfo_toplevel().bind(binding, action)
             else:
                 self.winfo_toplevel().unbind(binding)
-
-    def update(self):
-
-        return 0
 
     def animate(self):
 
@@ -60,4 +84,5 @@ class GameCanvas(tk.Canvas):
         else:
             self.bind_keys(False)
             self.destroy()
+            self.score = score
             return score

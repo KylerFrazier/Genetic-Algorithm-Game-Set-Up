@@ -1,8 +1,8 @@
 import tkinter as tk
 import ctypes
 from games import MovingBall
+from agents import RandomAgent
 from utils.controls import Controls
-
 
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
 
@@ -21,9 +21,9 @@ class UserInterface(tk.Tk):
         self.choice = tk.IntVar()
         self.choice.set(0)
         self.rows = tk.StringVar()
-        self.rows.set("10")
+        self.rows.set("1")
         self.cols = tk.StringVar()
-        self.cols.set("10")
+        self.cols.set("1")
         self.scale = tk.IntVar()
         self.choice.set(0)
 
@@ -85,10 +85,10 @@ class UserInterface(tk.Tk):
             if self.choice.get() == 0:
                 self.games[0].bind_keys()
             else:
-                self.games[0].bind_keys()
-                # REPLACE THIS WITH BINDING TO A.I.
+                for game in self.games:
+                    RandomAgent(game).start()
         except:
             print("Unable to connect input with the game.")
-            print("The game likely crashed before input connections were finished.")
+            print("The game likely finished or crashed before input connections were finished.")
 
         self.random_seed += 1
