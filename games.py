@@ -8,9 +8,9 @@ from utils.vectors import Vector2D
 # and momentum. Controlled with the WASD keys; press CTRL to run.
 class MovingBall(GameCanvas):
 
-    def generate(self, random_seed=None):
+    def generate(self):
         
-        seed(random_seed)
+        seed(self.random_seed)
         
         self.vm = self.vw if self.vw() < self.vh() else self.vh
         self.dim = (self.vw, self.vh)

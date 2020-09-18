@@ -28,7 +28,6 @@ class Agent(Thread, metaclass=ABCMeta):
             self.state = self.problem.get_state()
             self.act()
             sleep(self.tic_time)
-            print(self.problem)
         
         self.score = self.problem.get_score()
         return self.score

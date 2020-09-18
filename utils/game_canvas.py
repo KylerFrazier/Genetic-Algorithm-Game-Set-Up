@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 
 class GameCanvas(tk.Canvas, metaclass=ABCMeta):
 
-    def __init__(self, master=None, cnf={}, width=1280, height=720, fps=25, **kw):
+    def __init__(self, master=None, cnf={}, width=1280, height=720, fps=25, random_seed = None, **kw):
         
         kw["width"] = width
         kw["height"] = height
@@ -15,6 +15,7 @@ class GameCanvas(tk.Canvas, metaclass=ABCMeta):
             highlightthickness=5
         )
 
+        self.random_seed = random_seed
         self.set_fps(fps)
         self.score = None
 
