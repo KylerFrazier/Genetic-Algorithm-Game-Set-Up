@@ -1,12 +1,12 @@
+import tkinter as tk
 from time import sleep
 from abc import ABCMeta, abstractmethod
-from threading import Thread
 
-class Agent(Thread, metaclass=ABCMeta):
+class Agent(tk.Frame, metaclass=ABCMeta):
 
-    def __init__(self, problem, tps = None):
+    def __init__(self, problem, master=None, cnf={}, tps=25, **kw):
         
-        super().__init__(daemon=True)
+        super().__init__(master, cnf, **kw)
 
         self.problem = problem
         self.actions = self.problem.get_actions()
@@ -16,18 +16,25 @@ class Agent(Thread, metaclass=ABCMeta):
     def act(self):
 
         pass
+    
+    def start(self):
+
+        self.after(0, self.run)
 
     def set_tps(self, tps=25):
 
-        self.tic_time = 0 if tps == 0 else int(1/tps)
+        self.tps = tps
+        self.tic_time = 0 if tps == 0 else int(100/tps)
         return self.tic_time
 
     def run(self):
         
-        while self.problem.winfo_exists():
-            self.state = self.problem.get_state()
-            self.act()
-            sleep(self.tic_time)
+        if not self.problem.winfo_exists():
+            self.score = self.problem.get_score()
+            self.destroy()
+            return self.score
         
-        self.score = self.problem.get_score()
-        return self.score
+        self.state = self.problem.get_state()
+        self.act()
+        
+        self.after(self.tic_time, self.run)

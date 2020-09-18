@@ -22,7 +22,7 @@ class GameCanvas(tk.Canvas, metaclass=ABCMeta):
     @abstractmethod
     def generate(self):
 
-        pass
+        self.after(0, self.animate)
 
     @abstractmethod
     def get_bindings(self) -> dict:

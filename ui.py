@@ -21,9 +21,9 @@ class UserInterface(tk.Tk):
         self.choice = tk.IntVar()
         self.choice.set(0)
         self.rows = tk.StringVar()
-        self.rows.set("1")
+        self.rows.set("5")
         self.cols = tk.StringVar()
-        self.cols.set("2")
+        self.cols.set("8")
         self.scale = tk.IntVar()
         self.choice.set(0)
 
@@ -44,7 +44,7 @@ class UserInterface(tk.Tk):
 
         self.game_frame = tk.Frame(master=self)
         self.game_frame.pack(fill=tk.BOTH, side=tk.RIGHT, expand=True)
-        self.game_frame.configure(background="gray15")
+        self.game_frame.configure(background="black") #gray15
         
         self.random_seed = 0
         self.games = []
@@ -71,7 +71,7 @@ class UserInterface(tk.Tk):
                 tk.Grid.rowconfigure(self.game_frame, i, weight=1 if scalable else 0)
                 for j in range(col):
                     tk.Grid.columnconfigure(self.game_frame, j, weight=1 if scalable else 0)
-                    self.games.append(MovingBall(self.game_frame, random_seed=j))#self.random_seed
+                    self.games.append(MovingBall(self.game_frame, random_seed=self.random_seed))
                     self.games[i*col+j].grid(row=i, column=j, sticky=tk.N+tk.S+tk.E+tk.W)
         
         self.update()
