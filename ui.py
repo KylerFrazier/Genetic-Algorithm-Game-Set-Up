@@ -21,7 +21,7 @@ class UserInterface(tk.Tk):
         self.choice = tk.IntVar()
         self.choice.set(0)
         self.rows = tk.StringVar()
-        self.rows.set("5")
+        self.rows.set("7")
         self.cols = tk.StringVar()
         self.cols.set("8")
         self.scale = tk.IntVar()
