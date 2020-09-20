@@ -54,37 +54,25 @@ class MovingBall(GameCanvas):
 
         self.after(0, self.animate)
     
+    def get_actions(self) -> list:
+
+        return [self.up, self.left, self.down, self.right, self.run]
+
     def get_bindings(self) -> dict:
         
-        return {
-            "<KeyPress-w>" : (lambda _=None : self.up(True)),
-            "<KeyPress-a>" : (lambda _=None : self.left(True)),
-            "<KeyPress-s>" : (lambda _=None : self.down(True)),
-            "<KeyPress-d>" : (lambda _=None : self.right(True)),
-            "<KeyPress-Up>" : (lambda _=None : self.up(True)),
-            "<KeyPress-Left>" : (lambda _=None : self.left(True)),
-            "<KeyPress-Down>" : (lambda _=None : self.down(True)),
-            "<KeyPress-Right>" : (lambda _=None : self.right(True)),
-            "<KeyPress-Control_L>" : (lambda _=None : self.run(True)),
-            "<KeyRelease-w>" : (lambda _=None : self.up(False)),
-            "<KeyRelease-a>" : (lambda _=None : self.left(False)),
-            "<KeyRelease-s>" : (lambda _=None : self.down(False)),
-            "<KeyRelease-d>" : (lambda _=None : self.right(False)),
-            "<KeyRelease-Up>" : (lambda _=None : self.up(False)),
-            "<KeyRelease-Left>" : (lambda _=None : self.left(False)),
-            "<KeyRelease-Down>" : (lambda _=None : self.down(False)),
-            "<KeyRelease-Right>" : (lambda _=None : self.right(False)),
-            "<KeyRelease-Control_L>" : (lambda _=None : self.run(False))
-        }
+        keys1 = ["w", "a", "s", "d", "Control_L"]
+        keys2 = ["Up", "Left", "Down", "Right", "Control_R"]
+        bindings = {}
+        for i, action in enumerate(self.get_actions()):
+            bindings[f"KeyPress-{keys1[i]}"] = lambda _=None : action(True)
+            bindings[f"KeyRelease-{keys1[i]}"] = lambda _=None : action(False)
+            bindings[f"KeyPress-{keys2[i]}"] = lambda _=None : action(True)
+            bindings[f"KeyRelease-{keys2[i]}"] = lambda _=None : action(False)
+        return bindings
 
-    def get_state(self) -> dict:
+    def get_state(self) -> list:
         
-        return {
-            "x" : self.r.x,
-            "y" : self.r.y,
-            "goal x" : self.goal_r.x,
-            "goal y" : self.goal_r.y
-        }
+        return [self.r.x, self.r.y, self.goal_r.x, self.goal_r.y]
 
     def distance(self, v1, v2) -> float:
 
@@ -140,10 +128,10 @@ class MovingBall(GameCanvas):
 
     def update(self):
         
-        if self.tics >= 1000:
-            return -self.tics
+        if self.tics >= 100:
+            return -self.distance(self.r, self.goal_r)
         if self.distance(self.r, self.goal_r) <= abs(self.R - self.goal_R):
-            return -self.tics * self.score_factor
+            return 1 / (self.tics+1)
         
         self.tics += 1
 

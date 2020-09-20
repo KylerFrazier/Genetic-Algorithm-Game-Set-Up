@@ -11,12 +11,16 @@ class Agent(tk.Frame, metaclass=ABCMeta):
         self.problem = problem
         self.actions = self.problem.get_actions()
         self.set_tps(self.problem.get_fps() if tps == None else tps)
-            
+        self.score = None
+
     @abstractmethod
     def act(self):
 
         pass
     
+    def get_score(self):
+        return self.score
+
     def start(self):
 
         self.after(0, self.run)

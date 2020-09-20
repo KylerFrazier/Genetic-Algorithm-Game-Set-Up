@@ -25,14 +25,19 @@ class GameCanvas(tk.Canvas, metaclass=ABCMeta):
         self.after(0, self.animate)
 
     @abstractmethod
+    def get_actions(self) -> list:
+        
+        return []
+
+    @abstractmethod
     def get_bindings(self) -> dict:
         
         return {}
 
     @abstractmethod
-    def get_state(self) -> dict:
+    def get_state(self) -> list:
 
-        return {}
+        return []
 
     @abstractmethod
     def update(self):
@@ -60,10 +65,6 @@ class GameCanvas(tk.Canvas, metaclass=ABCMeta):
     def get_fps(self):
 
         return self.fps
-
-    def get_actions(self) -> list:
-        bindings = self.get_bindings()
-        return [bindings[binding] for binding in sorted(bindings)]
 
     def bind_keys(self, bind=True):
         
