@@ -1,7 +1,7 @@
 import tkinter as tk
 import ctypes
 import neat
-from games import MovingBall
+from games import MovingBall, Pong
 from agents import RandomAgent, NeuralNetworkAgent
 from utils.controls import Controls
 
@@ -86,8 +86,10 @@ class UserInterface(tk.Tk):
         self.choice.set(0)
         self.random_seed = tk.StringVar()
         self.random_seed.set("0")
-        self.cycles = tk.StringVar()
-        self.cycles.set("1")
+        self.num_gens = tk.StringVar()
+        self.num_gens.set("100")
+        self.games_per_gen = tk.StringVar()
+        self.games_per_gen.set("10")
         
 
         self.controls.make_gap(50)
@@ -102,11 +104,13 @@ class UserInterface(tk.Tk):
         self.controls.make_radio_buttons(self.scale, ["Scalable", "Fixed"])
         self.controls.make_gap(50)
         self.controls.make_spinboxes({
-            "Random Seed: " : self.random_seed}, min_val=-100, max_val=100)
-        self.controls.make_gap(50)
+            "Game Seed: " : self.random_seed}, min_val=-100, max_val=100)
+        self.controls.make_gap(400)
+        self.controls.make_button("Generate Game", self.generate)
         self.controls.make_spinboxes({
-            "Generations: " : self.cycles}, min_val=1, max_val=999)
-        self.controls.make_button("Generate Game", self.gen_game)
+            "Generations Left To Run: " : self.num_gens,
+            "Games per Generation: " : self.games_per_gen}, 
+            min_val=1, max_val=999)
         
         self.controls.pack(fill=tk.Y, side=tk.LEFT)
 
@@ -125,6 +129,11 @@ class UserInterface(tk.Tk):
         self.population.add_reporter(neat.StdOutReporter(False))
 
         self.mainloop()
+
+    def generate(self):
+        
+        self.gen_game()
+        self.games_done = 0
 
     def gen_game(self):
 
@@ -159,7 +168,6 @@ class UserInterface(tk.Tk):
         # try:
         if self.choice.get() == 0:
             self.games[0].bind_keys()
-            print(self.games[0].get_bindings())
         else:
             self.population.run1(self.fitness_function)
             # for game in self.games:
@@ -176,20 +184,28 @@ class UserInterface(tk.Tk):
                 self.after(100, self.check_done)
                 return
 
-        if int(self.cycles.get())%10 == 0:
+        if self.games_done == 0:
             for genome, _ in self.agents.items():
                 genome.fitness = 0
+        
+        self.games_done += 1
         self.set_fitnesses()
-        if self.cycles.get() != '1':
-            self.cycles.set(str(int(self.cycles.get())-1))
-            self.gen_game()
-        if int(self.cycles.get())%10 == 1:
+        
+        if self.games_done == int(self.games_per_gen.get()):
             self.population.run2()
+            if self.num_gens.get() != '1':
+                self.games_done = 0
+                self.num_gens.set(str(int(self.num_gens.get())-1))
+
+        if self.num_gens.get() != '1' or self.games_done != int(self.games_per_gen.get()):
+            self.gen_game()
 
     def fitness_function(self, genomes, config):
         self.agents = {}
 
         for i, (_, genome) in enumerate(genomes):
+            if i >= len(self.games):
+                break
             network = neat.nn.FeedForwardNetwork.create(genome, config)
             agent = NeuralNetworkAgent(self.games[i], network)
             self.agents[genome] = agent

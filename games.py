@@ -49,6 +49,7 @@ class MovingBall(GameCanvas):
             fill = "light blue"
         )
 
+        self.min_dist = self.vw(100) + self.vh(100)
         self.tics = 0
         self.score_factor = 1/self.distance(self.r, self.goal_r)
 
@@ -60,19 +61,32 @@ class MovingBall(GameCanvas):
 
     def get_bindings(self) -> dict:
         
-        keys1 = ["w", "a", "s", "d", "Control_L"]
-        keys2 = ["Up", "Left", "Down", "Right", "Control_R"]
-        bindings = {}
-        for i, action in enumerate(self.get_actions()):
-            bindings[f"KeyPress-{keys1[i]}"] = lambda _=None : action(True)
-            bindings[f"KeyRelease-{keys1[i]}"] = lambda _=None : action(False)
-            bindings[f"KeyPress-{keys2[i]}"] = lambda _=None : action(True)
-            bindings[f"KeyRelease-{keys2[i]}"] = lambda _=None : action(False)
-        return bindings
+        return {
+            "<KeyPress-w>" : (lambda _=None : self.up(True)),
+            "<KeyPress-a>" : (lambda _=None : self.left(True)),
+            "<KeyPress-s>" : (lambda _=None : self.down(True)),
+            "<KeyPress-d>" : (lambda _=None : self.right(True)),
+            "<KeyPress-Control_L>" : (lambda _=None : self.run(True)),
+            "<KeyPress-Up>" : (lambda _=None : self.up(True)),
+            "<KeyPress-Left>" : (lambda _=None : self.left(True)),
+            "<KeyPress-Down>" : (lambda _=None : self.down(True)),
+            "<KeyPress-Right>" : (lambda _=None : self.right(True)),
+            "<KeyPress-Control_R>" : (lambda _=None : self.run(True)),
+            "<KeyRelease-w>" : (lambda _=None : self.up(False)),
+            "<KeyRelease-a>" : (lambda _=None : self.left(False)),
+            "<KeyRelease-s>" : (lambda _=None : self.down(False)),
+            "<KeyRelease-d>" : (lambda _=None : self.right(False)),
+            "<KeyRelease-Control_L>" : (lambda _=None : self.run(False)),
+            "<KeyRelease-Up>" : (lambda _=None : self.up(False)),
+            "<KeyRelease-Left>" : (lambda _=None : self.left(False)),
+            "<KeyRelease-Down>" : (lambda _=None : self.down(False)),
+            "<KeyRelease-Right>" : (lambda _=None : self.right(False)),
+            "<KeyRelease-Control_R>" : (lambda _=None : self.run(False))
+        }
 
     def get_state(self) -> list:
         
-        return [self.r.x, self.r.y, self.goal_r.x, self.goal_r.y]
+        return [self.r.x - self.goal_r.x, self.r.y - self.goal_r.y]
 
     def distance(self, v1, v2) -> float:
 
@@ -128,9 +142,11 @@ class MovingBall(GameCanvas):
 
     def update(self):
         
+        self.dist = self.distance(self.r, self.goal_r)
+        self.min_dist = min(self.min_dist, self.dist)
         if self.tics >= 100:
-            return -self.distance(self.r, self.goal_r)
-        if self.distance(self.r, self.goal_r) <= abs(self.R - self.goal_R):
+            return -self.min_dist
+        if self.dist <= abs(self.R - self.goal_R):
             return 1 / (self.tics+1)
         
         self.tics += 1
@@ -165,4 +181,147 @@ class MovingBall(GameCanvas):
     def run(self, press=True):
 
         self.max_a = self.vm(1) if press else self.vm(0.2)
+
+class Pong(GameCanvas):
+
+    def generate(self):
+
+        seed(self.random_seed)
+
+        self.vm = self.vw if self.vw() < self.vh() else self.vh
+        self.dim = (self.vw, self.vh)
+        self.score = 0
         
+        # Paddle / Agent
+        self.height = self.vh(10)
+        self.width = self.vw(2)
+        self.x = 2 * self.width
+        self.y = self.vh(50)
+        self.dy = self.vh(2)
+        self.paddle = self.create_rectangle(
+            self.x-self.width,
+            self.y-self.height/2,
+            self.x,
+            self.y+self.height/2,
+            fill="white"
+        )
+
+        # Wall / Unbeatable Advisary
+        self.wall_x = self.vw(100) - self.x
+        self.wall = self.create_rectangle(
+            self.wall_x,
+            -self.vh(100),
+            self.wall_x + self.width,
+            self.vh(200),
+            fill="white"
+        )
+
+
+        # Ball
+        self.R = self.vh(1)
+        self.r = Vector2D(self.vw(49), self.vh(50))
+        self.v = Vector2D(-self.vw(2), self.vw(2) * (2*rand() - 1))
+        self.ball = self.create_oval(
+            self.r.x - self.R, self.r.y - self.R, 
+            self.r.x + self.R, self.r.y + self.R, 
+            fill = "light blue"
+        )
+
+        self.pressed = {
+            'up' : False, 
+            'down' : False, 
+        }
+
+        self.after(0, self.animate)
+
+    def get_actions(self) -> list:
+
+        return [self.up, self.down]
+
+    def get_bindings(self) -> dict:
+        
+        return {
+            "<KeyPress-w>" : (lambda _=None : self.up(True)),
+            "<KeyPress-s>" : (lambda _=None : self.down(True)),
+            "<KeyPress-Up>" : (lambda _=None : self.up(True)),
+            "<KeyPress-Down>" : (lambda _=None : self.down(True)),
+            "<KeyRelease-w>" : (lambda _=None : self.up(False)),
+            "<KeyRelease-s>" : (lambda _=None : self.down(False)),
+            "<KeyRelease-Up>" : (lambda _=None : self.up(False)),
+            "<KeyRelease-Down>" : (lambda _=None : self.down(False)),
+        }
+
+    def get_state(self) -> list:
+        
+        return [
+            self.y - self.height/2, 
+            self.vw(100) - (self.y - self.height/2), 
+            self.r.x - self.R - self.x, 
+            self.r.y - self.R - self.y
+        ]
+    
+    def update(self):
+        
+        if self.r.x < 0:
+            return self.score
+
+        # Move Paddle and check wall collisions
+        if self.pressed['up'] and not self.pressed['down']:
+            if self.y - self.dy < self.height/2:
+                self.move_paddle(self.height/2 - self.y)
+            else:
+                self.move_paddle(-self.dy)
+        elif self.pressed['down'] and not self.pressed['up']:
+            if self.y + self.dy > self.vh(100) - self.height/2:
+                self.move_paddle(self.vh(100) - self.height/2 - self.y)
+            else:
+                self.move_paddle(self.dy)
+        
+        ball_d = Vector2D(*self.v)
+
+        # Move ball and check paddle and wall collisions
+        if (self.r.x - self.R + self.v.x < self.x
+        and self.r.x - self.R > self.x
+        and self.y-self.height/2 < self.r.y < self.y+self.height/2):
+            self.v.x = -1*self.v.x
+            self.v.y = abs(self.v.x) * (self.r.y - self.y) / (self.height/2)
+            ball_d.x = self.v.x - (self.r.x - self.x)
+            self.score += 1
+        elif self.r.x + self.R + self.v.x > self.wall_x:
+            self.v.x = -1*self.v.x 
+            self.v.y = abs(self.v.x) * (2*rand() - 1)
+            ball_d.x = self.v.x - (self.r.x - self.wall_x)
+        
+        # Move ball and check ceiling and floor collisions
+        if self.r.y - self.R + self.v.y < 0:
+            self.v.y = -1*self.v.y
+            ball_d.y = self.v.y - self.r.y
+        elif self.r.y + self.R + self.v.y > self.vh(100):
+            self.v.y = -1*self.v.y
+            ball_d.y = self.v.y - (self.r.y - self.vh(100))
+        
+        self.move_ball(*ball_d)
+        
+    def move_paddle(self, dy):
+
+        self.y += dy
+        self.move(self.paddle, 0, dy)
+    
+    def move_ball(self, dx, dy):
+        
+        self.r.x += dx
+        self.r.y += dy
+        self.move(self.ball, dx, dy)
+    
+    def up(self, press=True):
+
+        # if press != self.pressed['up']:
+        #     self.score += 0.1
+        self.pressed['up'] = press
+        
+    def down(self, press=True):
+
+        # if press != self.pressed['down']:
+        #     self.score += 0.1
+        self.pressed['down'] = press
+

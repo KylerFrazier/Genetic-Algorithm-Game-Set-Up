@@ -7,7 +7,7 @@ class RandomAgent(Agent):
 
         if 100*rand() < 5:
             action = choice(self.actions)
-            action()
+            action(choice([True, False]))
 
 class NeuralNetworkAgent(Agent):
 

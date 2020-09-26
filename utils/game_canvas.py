@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 
 class GameCanvas(tk.Canvas, metaclass=ABCMeta):
 
-    def __init__(self, master=None, cnf={}, width=1280, height=720, fps=25, random_seed = None, **kw):
+    def __init__(self, master=None, cnf={}, width=852, height=480, fps=25, random_seed = None, **kw):
         
         kw["width"] = width
         kw["height"] = height
@@ -85,6 +85,6 @@ class GameCanvas(tk.Canvas, metaclass=ABCMeta):
             self.after(self.frame_time, self.animate)
         else:
             self.bind_keys(False)
-            self.destroy()
             self.score = score
+            self.destroy()
             return score
