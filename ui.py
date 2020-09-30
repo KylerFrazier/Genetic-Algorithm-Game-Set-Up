@@ -1,11 +1,14 @@
 import tkinter as tk
 import ctypes
 import neat
-from games import MovingBall, Pong
+import games
+import pickle
+import os
 from agents import RandomAgent, NeuralNetworkAgent
 from utils.controls import Controls
 
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
+CONFIG_FILE = "config.txt"
 
 class PopulationPerGen(neat.Population):
 
@@ -70,12 +73,13 @@ class UserInterface(tk.Tk):
         
         super().__init__()
 
-        self.title("Brick Breaker Menu")
+        self.title("AI Game Controls")
         self.configure(background="black")
         self.state("zoomed")
         
-        self.controls = Controls(master=self)
-
+        self.game_dict = {name:game for name, game in games.__dict__.items() \
+            if (isinstance(game, type) and game.__module__ == games.__name__)}
+        
         self.choice = tk.IntVar()
         self.choice.set(0)
         self.rows = tk.StringVar()
@@ -89,13 +93,18 @@ class UserInterface(tk.Tk):
         self.num_gens = tk.StringVar()
         self.num_gens.set("100")
         self.games_per_gen = tk.StringVar()
-        self.games_per_gen.set("10")
-        
+        self.games_per_gen.set("1")
+        self.game_type = tk.StringVar()
+        self.game_type.set(sorted(self.game_dict.keys())[0])
+
+        self.controls = Controls(master=self)
 
         self.controls.make_gap(50)
         self.controls.make_label("Genetic Algorithm\nGame Controls", 25)
         self.controls.make_gap(50)
-        self.controls.make_radio_buttons(self.choice, ["User", "A.I."])
+        self.controls.make_option_menu(self.game_type, sorted(self.game_dict.keys()), self.setup_population)
+        self.controls.make_gap(50)
+        self.controls.make_radio_buttons(self.choice, ["User", "Train A.I.", "Load A.I."])
         self.controls.make_gap(50)
         self.controls.make_spinboxes({
             "Number of Rows: " : self.rows, 
@@ -105,7 +114,9 @@ class UserInterface(tk.Tk):
         self.controls.make_gap(50)
         self.controls.make_spinboxes({
             "Game Seed: " : self.random_seed}, min_val=-100, max_val=100)
-        self.controls.make_gap(400)
+        self.controls.make_gap(50)
+        self.controls.make_button("Save Population", self.save_population)
+        self.controls.make_gap(200)
         self.controls.make_button("Generate Game", self.generate)
         self.controls.make_spinboxes({
             "Generations Left To Run: " : self.num_gens,
@@ -119,16 +130,49 @@ class UserInterface(tk.Tk):
         self.game_frame.configure(background="black") #gray15
         
         self.games = []
+
+        self.setup_population(sorted(self.game_dict.keys())[0])
+
+        self.mainloop()
+
+    def save_population(self):
         
-        # Set up AI
+        folder = os.path.join('.', "populations")
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+        folder = os.path.join(folder, self.game_type.get())
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+        
+        file_path = os.path.join(folder, self.game_type.get())
+
+        if os.path.exists(f"{file_path}.pickle"):
+            i = 1
+            while os.path.exists(f"{file_path} ({i}).pickle"):
+                i += 1
+            file_path += f" ({i})"
+        file_path += ".pickle"
+        
+        with open(file_path, 'wb') as p_file:
+            pickle.dump(self.population, p_file, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def setup_population(self, selected_game=""):
+
+        game_type = self.game_dict[selected_game]
+        temp_game = game_type()
+        temp_game.generate()
+        num_inputs = len(temp_game.get_state())
+        num_outputs = len(temp_game.get_actions())
+        temp_game.destroy()
+
+        set_config_file(num_inputs, num_outputs)
+
         config = neat.Config(
             neat.DefaultGenome, neat.DefaultReproduction,
             neat.DefaultSpeciesSet, neat.DefaultStagnation,
-            'config.txt')
+            CONFIG_FILE)
         self.population = PopulationPerGen(config)
         self.population.add_reporter(neat.StdOutReporter(False))
-
-        self.mainloop()
 
     def generate(self):
         
@@ -143,10 +187,12 @@ class UserInterface(tk.Tk):
                 game.destroy()
 
         scalable = True if self.scale.get() == 0 else False
-
+        
+        game_type = self.game_dict[self.game_type.get()]
+        
         self.games = []
         if self.choice.get() == 0:
-            self.games.append(MovingBall(self.game_frame))
+            self.games.append(game_type(self.game_frame))
             self.games[0].pack(fill=tk.BOTH if scalable else tk.NONE, expand=True)
         else:
             rows=int(self.rows.get())
@@ -155,7 +201,7 @@ class UserInterface(tk.Tk):
                 tk.Grid.rowconfigure(self.game_frame, i, weight=1 if scalable else 0)
                 for j in range(col):
                     tk.Grid.columnconfigure(self.game_frame, j, weight=1 if scalable else 0)
-                    self.games.append(MovingBall(self.game_frame, random_seed=int(self.random_seed.get())))
+                    self.games.append(game_type(self.game_frame, random_seed=int(self.random_seed.get())))
                     self.games[i*col+j].grid(row=i, column=j, sticky=tk.N+tk.S+tk.E+tk.W)
         
         self.update()
@@ -215,3 +261,23 @@ class UserInterface(tk.Tk):
     def set_fitnesses(self):
         for genome, agent in self.agents.items():
             genome.fitness += agent.get_score()
+
+# Helper Functions
+
+def set_config_file(num_inputs, num_outputs):
+
+    file_contents = []
+    with open(CONFIG_FILE, 'r') as read_file:
+        for line in read_file:
+            if line.startswith("num_inputs") and "=" in line:
+                parsed = line.split("=")
+                parsed[1] = f" {num_inputs}\n"
+                line = "=".join(parsed)
+            if line.startswith("num_outputs") and "=" in line:
+                parsed = line.split("=")
+                parsed[1] = f" {num_outputs}\n"
+                line = "=".join(parsed)
+            file_contents.append(line)
+    with open(CONFIG_FILE, 'w') as write_file:
+        for line in file_contents:
+            write_file.write(line)

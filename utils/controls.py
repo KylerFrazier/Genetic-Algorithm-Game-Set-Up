@@ -14,7 +14,7 @@ class Controls(tk.Frame):
         self.border = "gray"
         self.font_family = "Times New Roman"
         self.padx = 20
-        self.pady = 10
+        self.pady = 5
 
         self.configure(
             background=self.background, 
@@ -44,9 +44,10 @@ class Controls(tk.Frame):
 
         font = tk.font.Font(family=self.font_family, size=size)
         radiobuttons = []
+        button_grid = tk.Frame(master=self, background=self.background)
         for i, choice in enumerate(choices):
             rbutton = tk.Radiobutton(
-                master=self,
+                master=button_grid,
                 text=choice,
                 font=font,
                 foreground=self.color,
@@ -56,13 +57,13 @@ class Controls(tk.Frame):
                 selectcolor=self.button_selected,
                 indicatoron=0,
                 borderwidth=0,
-                width=10,
-                pady=10,
+                width=8,
                 variable=var,
                 value=i
             )
-            rbutton.grid(padx=self.padx, pady=self.pady)
+            rbutton.grid(row=0, column=i, padx=5)
             radiobuttons.append(rbutton)
+        button_grid.grid(padx=self.padx, pady=self.pady)
         return radiobuttons
 
     def make_button(self, text="", function=lambda : None, size=14, ):
@@ -76,8 +77,8 @@ class Controls(tk.Frame):
             activeforeground=self.color,
             font=font,
             text=text,
-            pady=25,
-            padx=25,
+            pady=10,
+            padx=10,
             borderwidth=0
         )
         button.grid(padx=self.padx, pady=self.pady)
@@ -121,3 +122,21 @@ class Controls(tk.Frame):
             spinboxes.append(spinbox)
         labels_and_spinboxes.grid()
         return tuple(spinboxes)
+
+    def make_option_menu(self, var="", options=[], function=lambda : None, size=14, ):
+
+        font = tk.font.Font(family=self.font_family, size=size)
+        option_menu = tk.OptionMenu(self, var, *options, command=function)
+        option_menu.configure(
+            indicatoron=0,
+            foreground=self.color,
+            background=self.button_background,
+            activebackground=self.hover,
+            activeforeground=self.color,
+            font=font,
+            pady=25,
+            padx=25,
+            borderwidth=0
+        )
+        option_menu.grid(padx=self.padx, pady=self.pady)
+        return option_menu
